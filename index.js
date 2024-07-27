@@ -6,6 +6,20 @@ app.use(express.json());
 const PORT = process.env.instance_Port;
 const Token = process.env.token;
 
+const corsOptions = {
+    origin: ['*', 'https://bistara.vercel.app', 'http://localhost:3000', 'https://bistaralinen.com.au'],
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
+    credentials: true,
+};
+app.use(cors(corsOptions));
+
+app.use((req, res, next) => {
+    console.log("Origin header:", req.headers.origin);
+    next();
+});
+
 app.post('/create-draft-order', async (req, res) => {
     // Log the incoming request body to verify data
     console.log('Incoming request body:', JSON.stringify(req.body, null, 2));
