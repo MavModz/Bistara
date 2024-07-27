@@ -2,6 +2,7 @@ require("dotenv").config();
 const express = require('express');
 const fetch = require('node-fetch');
 const app = express();
+const cors = require("cors");
 app.use(express.json());
 const PORT = process.env.instance_Port;
 const Token = process.env.token;
