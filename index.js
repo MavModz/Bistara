@@ -22,56 +22,56 @@ app.use((req, res, next) => {
 });
 
 app.post('/create-draft-order', async (req, res) => {
-    // Log the incoming request body to verify data
     console.log('Incoming request body:', JSON.stringify(req.body, null, 2));
-  
-    // Extract the draft_order object from the request body
+
+    // Extract the line_items and note from the request body
     const { draft_order } = req.body;
-  
-    if (!draft_order || !draft_order.line_items || !Array.isArray(draft_order.line_items) || draft_order.line_items.length === 0) {
-      return res.status(400).json({ error: 'Invalid or missing line items' });
+    const { line_items, note } = draft_order;
+
+    if (!line_items || !Array.isArray(line_items) || line_items.length === 0) {
+        return res.status(400).json({ error: 'Invalid or missing line items' });
     }
-  
+
     try {
-      // Prepare the payload for the Shopify API request
-      const payload = {
-        draft_order: {
-          line_items: draft_order.line_items.map(item => ({
-            variant_id: parseInt(item.variant_id, 10),
-            quantity: item.quantity
-          })),
-          use_customer_default_address: draft_order.use_customer_default_address,
-          tags: draft_order.tags,
-          note: draft_order.note
+        // Prepare the payload for the Shopify API request
+        const payload = {
+            draft_order: {
+                line_items: line_items.map(item => ({
+                    variant_id: parseInt(item.variant_id, 10),
+                    quantity: item.quantity
+                })),
+                use_customer_default_address: draft_order.use_customer_default_address,
+                tags: draft_order.tags,
+                note: note
+            }
+        };
+
+        console.log('Payload being sent:', JSON.stringify(payload, null, 2));
+
+        // Make the API request to create the draft order
+        const response = await fetch('https://bistaralinenco.myshopify.com/admin/api/2023-07/draft_orders.json', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Shopify-Access-Token': `${Token}`
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Error creating draft order:', errorText);
+            return res.status(response.status).json({ error: errorText });
         }
-      };
-  
-      console.log('Payload being sent:', JSON.stringify(payload, null, 2));
-  
-      // Make the API request to create the draft order
-      const response = await fetch('https://bistaralinenco.myshopify.com/admin/api/2023-07/draft_orders.json', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Shopify-Access-Token': `${Token}`
-        },
-        body: JSON.stringify(payload)
-      });
-  
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Error creating draft order:', errorText);
-        return res.status(response.status).json({ error: errorText });
-      }
-  
-      const data = await response.json();
-      res.json(data);
-  
+
+        const data = await response.json();
+        res.json(data);
+
     } catch (error) {
-      console.error('Error creating draft order:', error.message);
-      res.status(500).json({ error: error.message });
+        console.error('Error creating draft order:', error.message);
+        res.status(500).json({ error: error.message });
     }
-  });
+});
 
 app.listen(PORT, () => {
   console.log('Server is running on port' + PORT);
